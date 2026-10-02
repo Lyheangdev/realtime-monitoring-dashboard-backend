@@ -1,42 +1,11 @@
-from fastapi import FastAPI,WebSocket, WebSocketDisconnect
-from json import dumps as json_dumps, loads as Json_parse
-from typing import List
-from enum import Enum
-from pydantic import BaseModel
+# Build-in/third-party modules
+from contextlib import asynccontextmanager
+from fastapi import WebSocket, WebSocketDisconnect
 
-class SocketManager:
-    def __init__(self):
-        self.sockets: List[WebSocket] = []
+# Application modules
+from config.core import app, socketManager
 
-    async def connect(self, socket: WebSocket):
-        await socket.accept()
-        self.sockets.append(socket)
-
-    def disconnect(self, websocket: WebSocket):
-        self.sockets.remove(websocket)
-
-    async def push_personal(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
-
-    async def broadcast(self, message: str):
-        for connected_sturb in self.sockets:
-            await connected_sturb.send_text(message)
-
-
-class Station(str, Enum):
-    LNK = "lnk"
-    SMT = "smt"
-    IMT = "imt"
-
-# Type
-class IStation(BaseModel):
-    name : str 
-    description : str | None = None
-
-
-app  = FastAPI()
-socketManager = SocketManager()
-
+# Websocket entry-point
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     try:
@@ -46,19 +15,5 @@ async def websocket_endpoint(websocket: WebSocket):
             await socketManager.broadcast(data)
 
     except WebSocketDisconnect:
+        socketManager.disconnect(websocket=websocket)
         print("Client disconnected")
-       
-@app.get("/api/station/{station_name}")
-async def getStation(station_name: Station):
-    if station_name is Station.IMT:
-        return {"data": f"Hey: {station_name.value}"}
-    else:
-        return {"data": station_name}
-
-@app.post("/api/station")
-async def register_station(station: IStation):
-    return {"data": {**station.model_dump()}}
-
-@app.get("/")
-async def root():
-    return {"message" : "Hello World!"}
