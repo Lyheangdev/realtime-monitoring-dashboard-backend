@@ -1,6 +1,6 @@
 [project]
 name = "backend"
-version = "0.1.0"
+version = "1.0.0"
 description = "Backend for digital realtime dashboard"
 readme = "README.md"
 authors = [
@@ -8,7 +8,11 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "email-validator>=2.3.0",
     "fastapi[standard]>=0.141.1",
+    "psycopg2-binary>=2.9.13",
+    "python-multipart>=0.0.32",
+    "sqlmodel>=0.0.47",
 ]
 
 [project.scripts]
